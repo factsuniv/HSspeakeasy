@@ -1,0 +1,8 @@
+{
+  "name": "GH - Copy of (Official) Checkpoint 5-  Hospice Navigator AI Trainer",
+  "description": "Role-play simulation for Hospice Transition Navigators practicing family conversations.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
