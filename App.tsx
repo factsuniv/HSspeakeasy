@@ -377,9 +377,9 @@ const App: React.FC = () => {
     setIsAttestationAudioLoading(true);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const attestationText = "This is a clinical simulation for educational purposes. Do you agree that you will not share any real patient data?";
+      const attestationText = `Hello ${userName || 'Nurse'}, This is a clinical simulation for educational purposes. Do you agree that you will not share any real patient data?`;
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash-preview-tts",
+        model: "gemini-2.5-flash",
         contents: [{ parts: [{ text: attestationText }] }],
         config: {
           responseModalities: [Modality.AUDIO],

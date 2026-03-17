@@ -1,5 +1,5 @@
 
-export const GEMINI_LIVE_MODEL_NAME = 'gemini-2.5-flash-native-audio-preview-09-2025';
+export const GEMINI_LIVE_MODEL_NAME = 'gemini-2.5-flash';
 export const GEMINI_ANALYSIS_MODEL_NAME = 'gemini-3.1-pro-preview';
 export const GEMINI_EMBEDDING_MODEL_NAME = 'gemini-embedding-2-preview';
 
