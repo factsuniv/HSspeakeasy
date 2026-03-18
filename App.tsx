@@ -227,7 +227,7 @@ const App: React.FC = () => {
     if (!neuralPlex || isIndexing) return;
     setIsIndexing(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
       // Split into chunks of ~500 chars
       const chunks = neuralPlex.match(/[^.!?]+[.!?]+/g) || [neuralPlex];
       const newEmbeddings: { text: string, embedding: number[] }[] = [];
@@ -268,7 +268,7 @@ const App: React.FC = () => {
     
     try {
       const durationSec = (Date.now() - sessionStartTime.current) / 1000;
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
       const fullText = finalTranscript.map(t => `Nurse: ${t.user}\nFamily Member: ${t.model}`).join('\n') + `\nNurse: ${currentTurnRef.current.user}\nFamily Member: ${currentTurnRef.current.model}`;
 
       // --- SEMANTIC SEARCH USING EMBEDDING 2 ---
@@ -377,7 +377,7 @@ const App: React.FC = () => {
     if (isAttestationAudioLoading) return null; // Avoid concurrent calls
     setIsAttestationAudioLoading(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
       const attestationText = `Hello ${userName || 'Nurse'}, This is a clinical simulation for educational purposes. Do you agree that you will not share any real patient data?`;
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
@@ -443,7 +443,7 @@ const App: React.FC = () => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null; 
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
       const inputCtx = preheatedInputCtx.current; // Use the warmed-up context
       const actualSampleRate = inputCtx.sampleRate;
 
@@ -543,7 +543,7 @@ const App: React.FC = () => {
     try {
       setStatus(UI_STRINGS.CONNECTING);
       sessionStartTime.current = Date.now();
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
       
       const inputCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       const actualSampleRate = inputCtx.sampleRate;
