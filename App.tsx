@@ -348,9 +348,9 @@ const App: React.FC = () => {
       transcriptRef.current = []; 
       currentTurnRef.current = { user: '', model: '' };
 
-    } catch (e) { 
+    } catch (e: any) {
       console.error("Autopsy Failed", e); 
-      showError("The server is currently busy with other trainees. Please wait 60 seconds and try again.");
+      showError(e.message || "The server is currently busy with other trainees. Please wait 60 seconds and try again.");
     } finally { 
       setIsAnalyzing(false); 
       isProcessingAutopsy.current = false; 
@@ -372,8 +372,9 @@ const App: React.FC = () => {
   };
 
   // Generate attestation audio
-  const generateAttestationAudio = async () => {
-    if (attestationAudioUrl || isAttestationAudioLoading) return;
+  const generateAttestationAudio = async (): Promise<string | null> => {
+    if (attestationAudioUrl) return attestationAudioUrl;
+    if (isAttestationAudioLoading) return null; // Avoid concurrent calls
     setIsAttestationAudioLoading(true);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -389,10 +390,15 @@ const App: React.FC = () => {
         },
       });
       const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-      if (base64Audio) setAttestationAudioUrl(base64Audio);
-    } catch (error) {
+      if (base64Audio) {
+        setAttestationAudioUrl(base64Audio);
+        return base64Audio;
+      }
+      return null;
+    } catch (error: any) {
       console.error("Error generating attestation audio:", error);
-      showError("Failed to load the audio prompt. The server is currently busy. Please wait 60 seconds and try again.");
+      showError(error.message || "Failed to load the audio prompt. The server is currently busy. Please wait 60 seconds and try again.");
+      return null;
     } finally {
       setIsAttestationAudioLoading(false);
     }
@@ -400,7 +406,7 @@ const App: React.FC = () => {
 
   // Combined play and listen flow to ensure AudioContext is resumed by user gesture
   const playAttestationPromptAndListen = async () => {
-    if (!attestationAudioUrl || isAttestationAudioPlaying || isListeningForAttestation || !pendingStream) return;
+    if (isAttestationAudioPlaying || isListeningForAttestation || !pendingStream) return;
 
     // 1. Initialize Audio Context immediately on click (User Gesture)
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -411,12 +417,19 @@ const App: React.FC = () => {
     setAttestationSuccess(null); 
     setUserAttestationTranscription('');
 
-    // 2. Play Audio
-    await playBase64Audio(attestationAudioUrl, () => {
-        setIsAttestationAudioPlaying(false);
-        // 3. Connect Stream (Context is already warm)
-        startAttestationListening(); 
-    });
+    // Generate the audio on demand using the user's name if not yet generated
+    const audioToPlay = await generateAttestationAudio();
+
+    if (audioToPlay) {
+      // 2. Play Audio
+      await playBase64Audio(audioToPlay, () => {
+          setIsAttestationAudioPlaying(false);
+          // 3. Connect Stream (Context is already warm)
+          startAttestationListening();
+      });
+    } else {
+      setIsAttestationAudioPlaying(false);
+    }
   };
 
   const startAttestationListening = async () => {
@@ -514,11 +527,8 @@ const App: React.FC = () => {
     }
   };
 
-  // Effect to generate attestation audio when disclaimer is shown
+  // Effect to reset attestation state when disclaimer is closed
   useEffect(() => {
-    if (showDisclaimer && !attestationAudioUrl && !isAttestationAudioLoading) {
-      generateAttestationAudio();
-    }
     if (!showDisclaimer && attestationSessionRef.current) {
       attestationSessionRef.current.close();
       attestationSessionRef.current = null;
@@ -526,7 +536,7 @@ const App: React.FC = () => {
       setUserAttestationTranscription('');
       setAttestationSuccess(null);
     }
-  }, [showDisclaimer, attestationAudioUrl, isAttestationAudioLoading]);
+  }, [showDisclaimer]);
 
   // Main neural link initiation for conversation
   const initiateNeuralLink = async (stream: MediaStream) => {
